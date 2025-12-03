@@ -172,30 +172,40 @@ export class FormController {
             // Upload CSV to Google Drive
             await DriveService.uploadRegistrations(allRegistrations);
 
-            // Success
-            alert('Registration submitted successfully! CSV has been uploaded to Google Drive.');
+            // --- NEW CODE START ---
             
-            // Close modal
-            if (this.modalController) {
-                this.modalController.close();
-            }
+            // 1. Show success message (false sets it to green/success style)
+            this.showStatusMessage('Submission Complete!', false);
 
-            // Reset form
-            this.form.reset();
-            if (this.yearSelect) {
-                this.yearSelect.disabled = true;
-                this.yearSelect.innerHTML = '<option value="">Please select a major first</option>';
-            }
+            // 2. Hide the submit button temporarily
+            const submitBtn = this.form.querySelector('button[type="submit"]');
+            if(submitBtn) submitBtn.style.display = 'none';
+
+            // 3. Wait 2 seconds (2000ms), then close and reset
+            setTimeout(() => {
+                if (this.modalController) {
+                    this.modalController.close();
+                }
+
+                // Reset form
+                this.form.reset();
+                if (this.yearSelect) {
+                    this.yearSelect.disabled = true;
+                    this.yearSelect.innerHTML = '<option value="">Please select a major first</option>';
+                }
+                
+                // Cleanup: Hide message and show button again for next time
+                this.hideStatusMessage();
+                if(submitBtn) submitBtn.style.display = 'block';
+            }, 2000);
+
+            // --- NEW CODE END ---
 
         } catch (error) {
             // HANDLE DUPLICATE ENTRY - SHOW AS LABEL
             if (error.message === 'DUPLICATE_ENTRY') {
-                this.showStatusMessage('⚠️ You are already registered! This phone number is already in our system.', true);
+                this.showStatusMessage('⚠️ You are already registered!', true);
             } 
-            else {
-                console.error('Submission error:', error);
-                this.showStatusMessage('❌ Registration saved locally, but Google Drive upload failed. Check console.', true);
-            }
         } finally {
             this.setLoadingState(false);
         }
